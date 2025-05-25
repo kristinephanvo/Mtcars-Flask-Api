@@ -1,17 +1,59 @@
-# Flask API
+# Mtcars Flask API
 
-This is a more advanced example of an actual model deployed locally through a Flask API. The environment again is created through a `docker-compose` command, that again references the corresponding Dockerfile and requirements.txt file. 
+This homework and README file was adapted from the one provided in stat418.
 
-First as usual you will need to sync your repo to pull the new files. To run this API, change your directory to the docker folder and run:
+I am creating a predictive linear model using mpg as a response and cyl, disp, hp, drat, wt, qsec, vs, am, gear, carb as predictors using Python in a Docker container.
+
+The local host address is 4000.
+
+This repo contains the following files... 
+    curl_test.sh
+    docker-compose.yml
+    Dockerfile
+    mtcars.csv
+    prediction.py
+    README.md
+    requirements.txt
+    server.py
+
+Here is how to stand up my API...
+
+First, cd into the folder and run the following codes below
 
 `docker compose up -d`
 
-If it has created the localhost server correctly you will not get your prompt back. You will need to open a new terminal (be in the same directory) and run the following curl command to get a response
+Open up a new terminal window and run the curl command to check its up
 
-`curl http://localhost:5001/`
+`curl http://localhost:4000/`
 
-Finally, let's test out some predictions. If you open the `prediction.py` script you can see that the inputs into the model are "grade", "lat", "long", "sqft_living", "waterfront" and "yr_built". We will pass these through a json formatted input through a curl POST request to the API. This is done as
+Then, I run a test 
 
-`curl -H "Content-Type: application/json" -X POST -d '{"grade":"10.0","lat":"47.5396","long":"-122.073","sqft_living":"4495.0","waterfront":"0.0","yr_built":"2007.0"}' "http://localhost:5001/predict_price"`
+`curl -H "Content-Type: application/json" -X POST -d '{"cyl":"6","disp":"160","hp":"110","drat":"3.9","wt":"2.62","qsec":"16.46", "vs":"0","am":"1","gear":"4","carb":"4"}' "http://localhost:4000/predict_mpg"`
 
-You can change some of the values to see the prediction change.  Both of the curl commands can be found in the file `curl_test.sh`. As usual, check to see if you have any docker containers running using `docker container ls` and stop them through `docker componse down -v`
+Now that we know it works locally, the next step is to create a repository on the docker hub to push our image.
+
+Return to the terminal and into the folder and run the following code
+
+`docker ps -a`
+
+`docker images`
+
+We need to change the tag of the image to match the docker hub repository we just created
+
+`docker tag mtcars-flask-api-app:latest kpvo/mtcars-flask:latest`
+
+Now push it
+
+`docker push kpvo/mtcars-flask:latest`
+
+Almost done! Now we create our container on Google Cloud Run. 
+
+Once that is done, return to the terminal and run our curl command but with the url
+
+`curl -H "Content-Type: application/json" -X POST -d '{"cyl":"6","disp":"160","hp":"110","drat":"3.9","wt":"2.62","qsec":"16.46", "vs":"0","am":"1","gear":"4","carb":"4"}' "https://mtcars-flask-253216833082.us-central1.run.app/predict_mpg"`
+
+The response you should get is...
+
+`{
+  "predict mpg": 22.59950576126238
+}`
